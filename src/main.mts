@@ -5,13 +5,13 @@ const SUBGRAPH_URLS: Record<string, { decentralized: string }> = {
   // Ethereum Mainnet
   "1": {
     decentralized:
-      "https://gateway.thegraph.com/api/[api-key]/subgraphs/id/CJYGNhb7RvnhfBDjqpRnD3oxgyhibzc7fkAMa38YV3oS", // Ethereum Mainnet deployment
-  },
+      "https://gateway.thegraph.com/api/[api-key]/subgraphs/id/CJYGNhb7RvnhfBDjqpRnD3oxgyhibzc7fkAMa38YV3oS",
+  }, // PancakeSwap official subgraph, verifieable on https://docs.pancakeswap.finance/developers/api/subgraph
   // BSC Mainnet
   "56": {
     decentralized:
-      "https://gateway.thegraph.com/api/[api-key]/subgraphs/id/Hv1GncLY5docZoGtXjo4kwbTvxm3MAhVZqBZE4sUT9eZ", // BSC deployment
-  },
+      "https://gateway.thegraph.com/api/[api-key]/subgraphs/id/Hv1GncLY5docZoGtXjo4kwbTvxm3MAhVZqBZE4sUT9eZ",
+  }, // PancakeSwap official subgraph, verifieable on https://docs.pancakeswap.finance/developers/api/subgraph
 };
 
 interface PoolToken {
@@ -35,7 +35,8 @@ interface GraphQLResponse {
   data?: GraphQLData;
   errors?: { message: string }[]; // Assuming the API might return errors in this format
 }
-//defining headers for query
+
+// defining headers for query
 const headers: Record<string, string> = {
   "Content-Type": "application/json",
   Accept: "application/json",
@@ -81,6 +82,10 @@ function containsHtmlOrMarkdown(text: string): boolean {
   }
 
   return false;
+}
+
+function isEmptyOrInvalid(text: string): boolean {
+  return text.trim() === "" || containsHtmlOrMarkdown(text);
 }
 
 async function fetchData(
@@ -134,58 +139,31 @@ function truncateString(text: string, maxLength: number) {
   return text;
 }
 
-// Local helper function used by returnTags
-interface Token {
-  id: string;
-  name: string;
-  symbol: string;
-}
-
-interface Pool {
-  id: string;
-  createdAtTimestamp: number;
-  token0: Token;
-  token1: Token;
-}
-
 function transformPoolsToTags(chainId: string, pools: Pool[]): ContractTag[] {
-  // First, filter and log invalid entries
   const validPools: Pool[] = [];
   const rejectedNames: string[] = [];
 
   pools.forEach((pool) => {
-    const token0Invalid =
-      containsHtmlOrMarkdown(pool.token0.name) ||
-      containsHtmlOrMarkdown(pool.token0.symbol);
-    const token1Invalid =
-      containsHtmlOrMarkdown(pool.token1.name) ||
-      containsHtmlOrMarkdown(pool.token1.symbol);
+    const token0Invalid = isEmptyOrInvalid(pool.token0.name) || isEmptyOrInvalid(pool.token0.symbol);
+    const token1Invalid = isEmptyOrInvalid(pool.token1.name) || isEmptyOrInvalid(pool.token1.symbol);
 
     if (token0Invalid || token1Invalid) {
+      // Reject pools where any of the token names or symbols are empty or contain invalid content
       if (token0Invalid) {
-        rejectedNames.push(
-          pool.token0.name + ", Symbol: " + pool.token0.symbol
-        );
+        rejectedNames.push(`Contract: ${pool.id} rejected due to invalid token symbol/name - Token0: ${pool.token0.name}, Symbol: ${pool.token0.symbol}`);
       }
       if (token1Invalid) {
-        rejectedNames.push(
-          pool.token1.name + ", Symbol: " + pool.token1.symbol
-        );
+        rejectedNames.push(`Contract: ${pool.id} rejected due to invalid token symbol/name - Token1: ${pool.token1.name}, Symbol: ${pool.token1.symbol}`);
       }
     } else {
       validPools.push(pool);
     }
   });
 
-  // Log all rejected names
   if (rejectedNames.length > 0) {
-    console.log(
-      "Rejected token names due to HTML/Markdown content:",
-      rejectedNames
-    );
+    console.log("Rejected token names due to HTML/Markdown content or being empty:", rejectedNames);
   }
 
-  // Process valid pools into tags
   return validPools.map((pool) => {
     const maxSymbolsLength = 45;
     const symbolsText = `${pool.token0.symbol}/${pool.token1.symbol}`;
@@ -201,7 +179,7 @@ function transformPoolsToTags(chainId: string, pools: Pool[]): ContractTag[] {
   });
 }
 
-//The main logic for this module
+// The main logic for this module
 class TagService implements ITagService {
   // Using an arrow function for returnTags
   returnTags = async (
@@ -245,3 +223,4 @@ const tagService = new TagService();
 
 // Exporting the returnTags method directly
 export const returnTags = tagService.returnTags;
+
