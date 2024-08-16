@@ -2,16 +2,16 @@ import fetch from "node-fetch";
 import { ContractTag, ITagService } from "atq-types";
 
 const SUBGRAPH_URLS: Record<string, { decentralized: string }> = {
-  // Ethereum Mainnet
+  // Ethereum Mainnet, verifiable on https://docs.pancakeswap.finance/developers/api/subgraph
   "1": {
     decentralized:
       "https://gateway.thegraph.com/api/[api-key]/subgraphs/id/CJYGNhb7RvnhfBDjqpRnD3oxgyhibzc7fkAMa38YV3oS",
-  }, // PancakeSwap official subgraph, verifieable on https://docs.pancakeswap.finance/developers/api/subgraph
-  // BSC Mainnet
+  },
+  // BSC Mainnet, verifiable on https://docs.pancakeswap.finance/developers/api/subgraph
   "56": {
     decentralized:
       "https://gateway.thegraph.com/api/[api-key]/subgraphs/id/Hv1GncLY5docZoGtXjo4kwbTvxm3MAhVZqBZE4sUT9eZ",
-  }, // PancakeSwap official subgraph, verifieable on https://docs.pancakeswap.finance/developers/api/subgraph
+  },
 };
 
 interface PoolToken {
@@ -75,17 +75,17 @@ function isError(e: unknown): e is Error {
   );
 }
 
-function containsHtmlOrMarkdown(text: string): boolean {
-  // Simple HTML tag detection
-  if (/<[^>]*>/.test(text)) {
-    return true;
-  }
-
-  return false;
+function containsInvalidValue(text: string): boolean {
+  const containsHtml = /<[^>]*>/.test(text);
+  const isEmpty = text.trim() === "";
+  return isEmpty || containsHtml;
 }
 
-function isEmptyOrInvalid(text: string): boolean {
-  return text.trim() === "" || containsHtmlOrMarkdown(text);
+function truncateString(text: string, maxLength: number) {
+  if (text.length > maxLength) {
+    return text.substring(0, maxLength - 3) + "..."; // Subtract 3 for the ellipsis
+  }
+  return text;
 }
 
 async function fetchData(
@@ -132,20 +132,13 @@ function prepareUrl(chainId: string, apiKey: string): string {
   return urls.decentralized.replace("[api-key]", encodeURIComponent(apiKey));
 }
 
-function truncateString(text: string, maxLength: number) {
-  if (text.length > maxLength) {
-    return text.substring(0, maxLength - 3) + "..."; // Subtract 3 for the ellipsis
-  }
-  return text;
-}
-
 function transformPoolsToTags(chainId: string, pools: Pool[]): ContractTag[] {
   const validPools: Pool[] = [];
   const rejectedNames: string[] = [];
 
   pools.forEach((pool) => {
-    const token0Invalid = isEmptyOrInvalid(pool.token0.name) || isEmptyOrInvalid(pool.token0.symbol);
-    const token1Invalid = isEmptyOrInvalid(pool.token1.name) || isEmptyOrInvalid(pool.token1.symbol);
+    const token0Invalid = containsInvalidValue(pool.token0.name) || containsInvalidValue(pool.token0.symbol);
+    const token1Invalid = containsInvalidValue(pool.token1.name) || containsInvalidValue(pool.token1.symbol);
 
     if (token0Invalid || token1Invalid) {
       // Reject pools where any of the token names or symbols are empty or contain invalid content
@@ -161,7 +154,7 @@ function transformPoolsToTags(chainId: string, pools: Pool[]): ContractTag[] {
   });
 
   if (rejectedNames.length > 0) {
-    console.log("Rejected token names due to HTML/Markdown content or being empty:", rejectedNames);
+    console.log("Rejected contracts:", rejectedNames);
   }
 
   return validPools.map((pool) => {
