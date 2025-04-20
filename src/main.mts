@@ -2,15 +2,40 @@ import fetch from "node-fetch";
 import { ContractTag, ITagService } from "atq-types";
 
 const SUBGRAPH_URLS: Record<string, { decentralized: string }> = {
-  // Ethereum Mainnet, verifiable on https://docs.pancakeswap.finance/developers/api/subgraph
+  // Ethereum Mainnet subgraph, by team deployer 0xd09971d8ed6c6a5e57581e90d593ee5b94e348d4
   "1": {
     decentralized:
       "https://gateway.thegraph.com/api/[api-key]/subgraphs/id/CJYGNhb7RvnhfBDjqpRnD3oxgyhibzc7fkAMa38YV3oS",
   },
-  // BSC Mainnet, verifiable on https://docs.pancakeswap.finance/developers/api/subgraph
+  // BSC subgraph, by team deployer 0xd09971d8ed6c6a5e57581e90d593ee5b94e348d4
   "56": {
     decentralized:
       "https://gateway.thegraph.com/api/[api-key]/subgraphs/id/Hv1GncLY5docZoGtXjo4kwbTvxm3MAhVZqBZE4sUT9eZ",
+  },
+  // ZKsync subgraph, by team deployer 0xd09971d8ed6c6a5e57581e90d593ee5b94e348d4
+  "324": {
+    decentralized:
+      "https://gateway.thegraph.com/api/[api-key]/subgraphs/id/3dKr3tYxTuwiRLkU9vPj3MvZeUmeuGgWURbFC72ZBpYY",
+  },
+  // Polygon zkEVM subgraph, by team deployer 0xd09971d8ed6c6a5e57581e90d593ee5b94e348d4
+  "1101": {
+    decentralized:
+      "https://gateway.thegraph.com/api/[api-key]/subgraphs/id/7HroSeAFxfJtYqpbgcfAnNSgkzzcZXZi6c75qLPheKzQ",
+  },
+  // Base subgraph, by team deployer 0xd09971d8ed6c6a5e57581e90d593ee5b94e348d4
+  "8453": {
+    decentralized:
+      "https://gateway.thegraph.com/api/[api-key]/subgraphs/id/5YYKGBcRkJs6tmDfB3RpHdbK2R5KBACHQebXVgbUcYQp",
+  },
+  // Arbitrum subgraph, by team deployer 0xd09971d8ed6c6a5e57581e90d593ee5b94e348d4
+  "42161": {
+    decentralized:
+      "https://gateway.thegraph.com/api/[api-key]/subgraphs/id/251MHFNN1rwjErXD2efWMpNS73SANZN8Ua192zw6iXve",
+  },
+  // Linea subgraph, by team deployer 0xd09971d8ed6c6a5e57581e90d593ee5b94e348d4
+  "59144": {
+    decentralized:
+      "https://gateway.thegraph.com/api/[api-key]/subgraphs/id/6gCTVX98K3A9Hf9zjvgEKwjz7rtD4C1V173RYEdbeMFX",
   },
 };
 
